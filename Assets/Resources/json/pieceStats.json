@@ -1,0 +1,52 @@
+{
+  "pieces": [
+    {
+      "piece": "Pawn",
+      "health": 75,
+      "mana": 50,
+      "healthRegeneration": 0.5,
+      "manaRegeneration": 1,
+      "cost": 1
+    },
+    {
+      "piece": "Knight",
+      "health": 100,
+      "mana": 125,
+      "healthRegeneration": 3,
+      "manaRegeneration": 2,
+      "cost": 3
+    },
+    {
+      "piece": "Bishop",
+      "health": 100,
+      "mana": 100,
+      "healthRegeneration": 3,
+      "manaRegeneration": 2,
+      "cost": 3
+    },
+    {
+      "piece": "Rook",
+      "health": 150,
+      "mana": 100,
+      "healthRegeneration": 4,
+      "manaRegeneration": 4,
+      "cost": 5
+    },
+    {
+      "piece": "Queen",
+      "health": 200,
+      "mana": 200,
+      "healthRegeneration": 10,
+      "manaRegeneration": 10,
+      "cost": 9
+    },
+    {
+      "piece": "King",
+      "health": 300,
+      "mana": 150,
+      "healthRegeneration": 10,
+      "manaRegeneration": 5,
+      "cost": 100
+    }
+  ]
+}

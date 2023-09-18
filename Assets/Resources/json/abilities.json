@@ -1,0 +1,110 @@
+{
+  "abilities": [
+    {
+      "name": "fireball",
+      "targeted": true,
+      "manaCost": 40,
+      "cooldown": 4,
+      "icon": "fireball",
+      "properties": [
+        {
+          "type": "damage",
+          "value": 40
+        }
+      ]
+    },
+    {
+      "name": "weaker",
+      "targeted": false,
+      "manaCost": 50,
+      "cooldown": 6,
+      "icon": "healthDecreasing",
+      "properties": [
+        {
+          "type": "healthDecreasing",
+          "value": 0.25
+        },
+        {
+          "type": "duration",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "teleport",
+      "targeted": true,
+      "manaCost": 75,
+      "cooldown": 2,
+      "chargesConditions": [
+        {
+          "condition": "captureEnemyPiece"
+        }
+      ]
+    },
+    {
+      "name": "doubleStep",
+      "targeted": false,
+      "manaCost": 40,
+      "cooldown": 5
+    },
+    {
+      "name": "hex",
+      "targeted": false,
+      "manaCost": 40,
+      "cooldown": 3
+    },
+    {
+      "name": "kamikadze",
+      "targeted": false,
+      "passive": true,
+      "properties": [
+        {
+          "type": "basicDamage",
+          "value": 0
+        },
+        {
+          "type": "damagePerCost",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "shadowStep",
+      "targeted": true,
+      "manaCost": 50,
+      "cooldown": 1
+    },
+    {
+      "name": "mindControl",
+      "targeted": true,
+      "manaCost": 80,
+      "cooldown": 12,
+      "properties": [
+        {
+          "type": "duration",
+          "value": 3
+        },
+        {
+          "type": "rocketDamage",
+          "value": 25
+        }
+      ]
+    },
+    {
+      "name": "punch",
+      "targeted": false,
+      "manaCost": 40,
+      "cooldown": 7,
+      "properties": [
+        {
+          "type": "damage",
+          "value": 10
+        },
+        {
+          "type": "additionalDamage",
+          "value": 15
+        }
+      ]
+    }
+  ]
+}
