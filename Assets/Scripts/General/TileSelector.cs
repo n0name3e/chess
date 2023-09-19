@@ -58,7 +58,6 @@ public class TileSelector : MonoBehaviour
     {
         if (!GameManager.instance.showAbilities) return;
         selectedAbility = null;
-        //UnhighlightTiles();
         Ray ray;
         if (isAndroid)
         {
@@ -121,9 +120,7 @@ public class TileSelector : MonoBehaviour
                 }
                 if (doubleMovePiece != null && tileObject.tile.CurrentPiece != null
                     && tileObject.tile.CurrentPiece != doubleMovePiece)
-                    
-                    //&& tileObject.tile.CurrentPiece != null && tileObject.tile.CurrentPiece.color == selectedTileObject.tile.CurrentPiece.color) 
-                {
+                { 
                     return;
                 }
                 if (selectedTileObject == null && tile.CurrentPiece != null && tile.CurrentPiece.color != BoardCreator.playerColor)
@@ -136,28 +133,22 @@ public class TileSelector : MonoBehaviour
                 {
                     if (selectedTile.CurrentPiece.color == tile.CurrentPiece.color)
                     {
-                        //selectedTileObject.SetDefaultColor();
-                        //UnhighlightTiles(); // possibleTileMoves);
                         ChangeSelectedTile(tile.tileObject);
                         HighlightTiles(possibleTileMoves);
-                        //selectedTileObject.SetSelectedColor();
                     }
                     else
-                    {
-                        
+                    {                      
                         MovePiece(tile);
                     }
                 }
                 else if (selectedTileObject == null && tile.CurrentPiece != null)
                 {
                     ChangeSelectedTile(tile.tileObject);
-                    //selectedTileObject.SetSelectedColor();
                     HighlightTiles(possibleTileMoves);
                 }
                 else if (tile == selectedTile)
                 {
-                    //selectedTileObject.SetDefaultColor();
-                    UnhighlightTiles(); //possibleTileMoves);
+                    UnhighlightTiles();
                     ChangeSelectedTile(null);
                 }
             }
@@ -189,22 +180,18 @@ public class TileSelector : MonoBehaviour
                     b.RemoveTokens(1);
                     return;
                 }
-                else
-                {
-                    //doubleMovePiece = null;
-                }
                 GameManager.instance.EndTurn();
                 return;
             }
         }
         selectedTileObject.SetDefaultColor();
-        UnhighlightTiles(); //possibleTileMoves);
+        UnhighlightTiles(); 
         ChangeSelectedTile(null);
         Profiler.EndSample();
 
         void NewMethod()
         {
-            UnhighlightTiles(); //possibleTileMoves);
+            UnhighlightTiles(); 
             selectedTile.CurrentPiece.hasMoved = true;
             selectedTileObject.SetDefaultColor();
         }
@@ -225,12 +212,10 @@ public class TileSelector : MonoBehaviour
         {
             UnhighlightTiles();
             ChangeSelectedTile(null);
-            //if (ability.cooldown > 0 || ability.owner.mana < AbilityManager.Instance.FindAbility(ability.name).manaCost) return;
             if (!ability.canBeCasted()) return;
             foreach (Tile tile in tiles)
             {
                 tile.tileObject.SetAbilityHightlightedColor();
-                //tile.currentAbility = selectedAbility;
                 abilityTiles = tiles;
                 highlightedTiles.Add(tile.tileObject);
             }
@@ -239,13 +224,7 @@ public class TileSelector : MonoBehaviour
         {
             abilityTiles.Clear();
         }
-        //SetSelectedPiece(null);
-        //UnhighlightTiles();
     }
-    /*public void HighlightAbilityTiles(List<Tile> tiles)
-    {
-
-    }*/
     public void SetMovedTiles((Tile, Tile) tiles)
     {
         tiles.Item1.tileObject.GetComponent<MeshRenderer>().material.color = Color.red;
