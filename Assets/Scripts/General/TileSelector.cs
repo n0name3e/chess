@@ -39,7 +39,7 @@ public class TileSelector : MonoBehaviour
     void Update()
     {
         if (GameManager.instance.GameEnded) return;
-        if (isAndroid && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
             CheckTile();
             ShowStats();
