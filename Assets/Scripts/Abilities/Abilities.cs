@@ -13,7 +13,10 @@ public class Abilities : MonoBehaviour
     void Start()
     {
         //StartCoroutine(a());
-        a(BoardCreator.mainBoard);
+        if (GameManager.instance.showAbilities)
+        {
+            a(BoardCreator.mainBoard);
+        }
     }
     public static void JAA()
     {

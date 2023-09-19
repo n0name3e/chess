@@ -19,8 +19,13 @@ public class UI : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    private void Start()
+    {
+        infoContainer.SetActive(GameManager.instance.showAbilities);
+    }
     public void DisplayInfoContainer(Piece piece, bool castableAbilities)
     {
+        if (!GameManager.instance.showAbilities) return;
         RemoveAbilityButtons();
         if (piece.pieceObject == null)
         {

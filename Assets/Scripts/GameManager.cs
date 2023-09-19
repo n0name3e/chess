@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     private Colors currentTurn = Colors.White;
     private bool gameEnded = false;
     private Delegates delegates;
+    public bool showAbilities = true;
     public Colors CurrentTurn { get => currentTurn; set => currentTurn = value; }
     public bool GameEnded { get => gameEnded; private set => gameEnded = value; }
     public Delegates Delegates { get => delegates; private set => delegates = value; }
@@ -30,25 +31,29 @@ public class GameManager : MonoBehaviour
     {
         currentTurn = currentTurn == Colors.White ? Colors.Black : Colors.White;
         PawnPromotion();
-        foreach (Piece piece in BoardCreator.mainBoard.pieces)
+        if (showAbilities)
         {
-            if (piece.color != currentTurn)
+            foreach (Piece piece in BoardCreator.mainBoard.pieces)
             {
-                piece.Heal(piece.healthRegeneration);
-                piece.ReplenishMana(piece.manaRegeneration);
-                foreach (Ability ability in piece.abilities)
+                if (piece.color != currentTurn)
                 {
-                    if (ability.cooldown > 0) ability.cooldown--;
+                    piece.Heal(piece.healthRegeneration);
+                    piece.ReplenishMana(piece.manaRegeneration);
+                    foreach (Ability ability in piece.abilities)
+                    {
+                        if (ability.cooldown > 0) ability.cooldown--;
+                    }
                 }
             }
-        }
 
-        BuffManager.Instance.UpdateAllBuff(currentTurn);
+            BuffManager.Instance.UpdateAllBuff(currentTurn);
 
-        if (TileSelector.Instance.selectedPiece != null)
-        {
-            StartCoroutine(DisplayInfo());
+            if (TileSelector.Instance.selectedPiece != null)
+            {
+                StartCoroutine(DisplayInfo());
+            }
         }
+        
         if (CurrentTurn != BoardCreator.playerColor)
         {
             StartCoroutine(MakeAiMove());

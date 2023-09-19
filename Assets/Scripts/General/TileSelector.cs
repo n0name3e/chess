@@ -18,11 +18,9 @@ public class TileSelector : MonoBehaviour
     public Piece doubleMovePiece;
     [SerializeField] private bool isAndroid = false;
     [SerializeField] private UnityEngine.UI.Text text;
-    [SerializeField] private UnityEngine.UI.Text tooltip;
 
     private List<TileObject> highlightedTiles = new List<TileObject>();
     private List<Tile> abilityTiles = new List<Tile>();
-    int a;
 
     public static TileSelector Instance { get => instance; set => instance = value; }
 
@@ -58,6 +56,7 @@ public class TileSelector : MonoBehaviour
     }
     private void ShowStats()
     {
+        if (!GameManager.instance.showAbilities) return;
         selectedAbility = null;
         //UnhighlightTiles();
         Ray ray;

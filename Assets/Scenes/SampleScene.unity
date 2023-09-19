@@ -186,9 +186,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68edf2d93bc25da4a9d89c82ca1f9412, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isAndroid: 0
+  isAndroid: 1
   text: {fileID: 1375618290}
-  tooltip: {fileID: 964867273}
 --- !u!224 &35947047 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3974918493029295832, guid: a54a1bd5573f1a4489af73c407194441,
@@ -1169,6 +1168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b46371864838b9f4b8515043f1a2b736, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showAbilities: 0
 --- !u!4 &881942652
 Transform:
   m_ObjectHideFlags: 0

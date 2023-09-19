@@ -337,11 +337,11 @@ public class ChessAI: MonoBehaviour
         {
             if (evaluatedPiece.pieceType == PieceType.Pawn)
             {
-                bool protectingPawn0 = board.FindTile(evaluatedPiece.x + 1, evaluatedPiece.y - pawnForwardDirection).CurrentPiece?.color == evaluatedPiece.color;
-                bool protectingPawn1 = board.FindTile(evaluatedPiece.x - 1, evaluatedPiece.y - pawnForwardDirection).CurrentPiece?.color == evaluatedPiece.color;
+                bool protectingPawn0 = board.FindTile(evaluatedPiece.x + 1, evaluatedPiece.y - pawnForwardDirection)?.CurrentPiece?.color == evaluatedPiece.color;
+                bool protectingPawn1 = board.FindTile(evaluatedPiece.x - 1, evaluatedPiece.y - pawnForwardDirection)?.CurrentPiece?.color == evaluatedPiece.color;
                 if (protectingPawn0 || protectingPawn1)
                 {
-                    print("2991");
+                    print("+1");
                     eval += 1f;
                 }         
             }
