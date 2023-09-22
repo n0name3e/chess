@@ -5,6 +5,7 @@ public class Pawn
 {
     private Piece pieceObject;
     private PieceDataList pieceData;
+    private Board board;
 
     private int[,] squareTable = new int[8, 8] // [y, x]
     {
@@ -30,6 +31,7 @@ public class Pawn
         piece.healthRegeneration = Find().healthRegeneration;
         piece.manaRegeneration = Find().manaRegeneration;
         piece.cost = Find().cost;
+        board = pieceObject.board;
     }
     private PieceData Find()
     {
@@ -45,9 +47,19 @@ public class Pawn
         List<Tile> possibleTiles = new List<Tile>();
         int x = pieceObject.x;
         int y = pieceObject.y;
-        if (king)
+
+        int forwardDirection = (pieceObject.color == Colors.White) ? 1: -1;
+        int lastY = (pieceObject.color == Colors.White) ? 8: 1;
+        int firstY = (pieceObject.color == Colors.White) ? 2: 7;
+        if (king) // captures
         {
-            if (pieceObject.color == Colors.White)
+            // List<Tile> captureTiles = new List<Tile>();
+            /*possibleTiles.Add(board.FindTile(x + 1, y + forwardDirection));
+            possibleTiles.Add(board.FindTile(x - 1, y + forwardDirection));*/
+            GetCaptureMoves(forwardDirection, possibleTiles);
+
+            return possibleTiles;
+            /*if (pieceObject.color == Colors.White)
             {
                 if (x <= 7 && y <= 7)
                 {
@@ -69,8 +81,26 @@ public class Pawn
                     possibleTiles.Add(pieceObject.board.FindTile(x - 1, y - 1));
                 }
             }
-            return possibleTiles;
+            return possibleTiles;*/
         }
+
+        Tile tile = board.FindTile(x, firstY + forwardDirection);
+        if (CheckTile(tile)) possibleTiles.Add(tile);
+        GetCaptureMoves(forwardDirection, possibleTiles); 
+        /*if (tile.CurrentPiece == null)
+        {
+            if (checkKing) 
+            {
+                if (GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color) possibleTiles.Add(tile);
+            }
+            else possibleTiles.Add(tile);*/                
+        }
+        if (y == firstY) 
+        {
+            tile = board.FindTile(x, firstY + 2 * forwardDirection);
+            if (CheckTile(tile)) possibleTiles.Add(tile);
+        }
+/*
         if (pieceObject.color == Colors.White)
         {
             Tile tile = pieceObject.board.FindTile(x, 3);
@@ -193,7 +223,20 @@ public class Pawn
                     else possibleTiles.Add(tile);
                 }
             }
-        }
+        }*/
         return possibleTiles;
+    }
+    private bool CheckTile(Tile tile, bool checkKing)
+    {
+        if (tile != null && tile.CurrentPiece == null)
+        {
+            if ((checkKing && GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color)) || !checkKing) return true;
+        } 
+        return false;
+    }
+    private void GetCaptureMoves(int forwardDirection, List<Tile> tiles)
+    {
+        possibleTiles.Add(board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection));
+        possibleTiles.Add(board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection));
     }
 }
