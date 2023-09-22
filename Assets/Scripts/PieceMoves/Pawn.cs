@@ -234,9 +234,18 @@ public class Pawn
         } 
         return false;
     }
-    private void GetCaptureMoves(int forwardDirection, List<Tile> tiles)
+    private void GetCaptureMoves(int forwardDirection, List<Tile> tiles, bool king)
     {
-        possibleTiles.Add(board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection));
-        possibleTiles.Add(board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection));
+        Tile leftTile = board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection);
+        Tile rightTile = board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection);
+        if (king)
+        {
+            possibleTiles.Add(leftTile);
+            possibleTiles.Add(rightTile);
+        }
+        if (leftTile?.CurrentPiece != null && leftTile.CurrentPiece.color != pieceObject.color) possibleTiles.Add(leftTile);
+        if (rightTile?.CurrentPiece != null && rightTile.CurrentPiece.color != pieceObject.color) possibleTiles.Add(rightTile);
+        /*possibleTiles.Add(board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection));
+        possibleTiles.Add(board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection));*/
     }
 }
