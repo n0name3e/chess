@@ -34,6 +34,7 @@ public class Piece
 
     public float health;
     public float mana;
+    public int stunTimer { get; set; }
 
     public bool shouldMove = true;
 
@@ -113,7 +114,24 @@ public class Piece
         }
         return null;
     }
-    public Piece(Piece clonePiece, Board board, bool changeTile = true)
+    public void Stun(int duration)
+    {
+        stunTimer = Mathf.Max(stunTimer, duration);
+        GameManager.Instance.Delegates.OnTurnEnd += ReduceStunTimer;
+    }
+    public bool IsStunned()
+    {
+        return stunTimer > 0;
+    }
+    public void ReduceStunTimer(Colors color)
+    {
+        if (color == this.color)
+        {
+            stunTimer--;
+            if (stunTimer <= 0) GameManager.Instance.Delegates.OnTurnEnd -= ReduceStunTimer;
+        }
+    }
+        public Piece(Piece clonePiece, Board board, bool changeTile = true)
     {
         x = clonePiece.x;
         y = clonePiece.y;

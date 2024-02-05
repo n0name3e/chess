@@ -21,11 +21,11 @@ public class UI : MonoBehaviour
     }
     private void Start()
     {
-        infoContainer.SetActive(GameManager.instance.showAbilities);
+        infoContainer.SetActive(GameManager.Instance.showAbilities);
     }
     public void DisplayInfoContainer(Piece piece, bool castableAbilities)
     {
-        if (!GameManager.instance.showAbilities) return;
+        if (!GameManager.Instance.showAbilities) return;
         RemoveAbilityButtons();
         if (piece.pieceObject == null)
         {
@@ -44,7 +44,7 @@ public class UI : MonoBehaviour
             = piece.mana / piece.maxMana;   
         infoContainer.transform.GetChild(3).GetChild(0).GetComponent<Text>().text =
             $"{Mathf.Ceil(piece.mana)}/{Mathf.Ceil(piece.maxMana)}";
-        AbilityManager.Instance.CreateAbilityButtons(piece, infoContainer.transform.GetChild(4), castableAbilities);
+        AbilityManager.Instance.CreateAbilityButtons(piece, infoContainer.transform.GetChild(4), infoContainer.transform.GetChild(5), castableAbilities);
     }
     public void RemoveAbilityButtons()
     {
@@ -52,11 +52,15 @@ public class UI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+        foreach (Transform child1 in infoContainer.transform.GetChild(5))
+        {
+            Destroy(child1.gameObject);
+        }
     }
     public void Restart()
     {
         BoardCreator.Instance.DestroyMainBoard();
-        GameManager.instance.StartGame();
+        GameManager.Instance.StartGame();
     }
     public void Quit()
     {

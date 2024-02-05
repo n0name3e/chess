@@ -25,11 +25,12 @@
     public void UndoMove()
     {
         if (movedPiece.currentTile == null) return;
-        if (startingTile.CurrentPiece != null)
-        {
-            UnityEngine.MonoBehaviour.print(startingTile.CurrentPiece == null);
-        }
         movedPiece.MovePiece(startingTile.x, startingTile.y, board);
+        UndoPieceState();
+    }
+
+    private void UndoPieceState()
+    {
         if (capturedPiece != null)
         {
             board.pieces = piecesList;
@@ -37,6 +38,7 @@
             capturedPiece.currentTile.CurrentPiece = capturedPiece;
         }
     }
+
     public Move(Piece movedPiece)
     {        
         this.movedPiece = movedPiece;

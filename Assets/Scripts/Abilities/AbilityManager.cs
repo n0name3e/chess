@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class AbilityManager : MonoBehaviour
@@ -6,6 +7,7 @@ public class AbilityManager : MonoBehaviour
     private static AbilityManager instance;
     string jsonData;
     AbilityDataList abilityList;
+    public List<Ability> generalAbilities = new List<Ability>();
 
     Vector2 anchorPosition;
 
@@ -38,18 +40,17 @@ public class AbilityManager : MonoBehaviour
     public void CastAbility(Ability ability, Tile tile, Piece castingPiece)
     {
         if (!ability.canBeCasted()) return;
-        if (ability.OnTargetedAbilityChoose != null)
-        {
-            ability.OnTileChoose.Invoke(tile, castingPiece);
-            //tile.currentAbility.OnTileChoose.Invoke(tile, castingPiece);
-        }
-        else if (ability.OnUntargetedAbilityChoose != null)
+        ability.OnGeneralAbilityTileChoose?.Invoke(tile);
+
+        ability.OnTileChoose?.Invoke(tile, castingPiece);
+        
+        if (ability.OnUntargetedAbilityChoose != null)
         {
             if (ability.OnUntargetedAbilityChoose.Invoke(castingPiece) == false) return;
         }
-        if (GameManager.instance.KingInCheck(BoardCreator.mainBoard, Colors.Black).check)
+        if (GameManager.Instance.KingInCheck(BoardCreator.mainBoard, Colors.Black).check)
         {
-            GameManager.instance.EndTurn();
+            GameManager.Instance.EndTurn();
         }
         ability.cooldown = FindAbility(ability.name).cooldown;
         castingPiece.mana -= FindAbility(ability.name).manaCost;
@@ -65,68 +66,87 @@ public class AbilityManager : MonoBehaviour
     /// </summary>
     /// <param name="piece"></param>
     /// <param name="container">container of abilities</param>
-    public void CreateAbilityButtons(Piece piece, Transform container, bool castableAbilities)
+    public void CreateAbilityButtons(Piece piece, Transform container, Transform generalAbilityContainer, bool castableAbilities)
     {
         anchorPosition = container.GetComponent<GridLayoutGroup>().cellSize;
         for (int i = 0; i < piece.abilities.Count; i++)
         {
-            Ability ability = piece.abilities[i];
-            GameObject button = Instantiate(new GameObject("Ability"), container);
-            button.AddComponent<RectTransform>();
-            button.transform.SetParent(container);
-            button.AddComponent<Image>();
-            Sprite sprite = Resources.Load<Sprite>("abilityIcons/" + ability.name);
-            if (sprite != null)
-            {
-                button.GetComponent<Image>().sprite = sprite;
-            }
-            else
-            {
-                GameObject text = Instantiate(new GameObject("text"));
-                RectTransform rt = text.AddComponent<RectTransform>();
-                Text t = text.AddComponent<Text>();
-                t.text = ability.name;
-                t.transform.SetParent(button.transform);
-                rt.anchoredPosition = Vector2.zero;
-                t.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-                t.color = Color.black;
-                t.alignment = TextAnchor.MiddleCenter;
-                t.fontSize = 25;
-            }
+            CreateAbility(piece.abilities[i], container, castableAbilities);
+        } 
+        for (int j = 0; j < generalAbilities.Count; j++)
+        {
+            CreateAbility(generalAbilities[j], generalAbilityContainer, castableAbilities);          
+        }      
+    }
 
-            float mana = FindAbility(ability.name).manaCost;
-            if (mana > 0)
-            {
-                GameObject manaCost = new GameObject("mana");
-                RectTransform rt = manaCost.AddComponent<RectTransform>();
-                manaCost.transform.SetParent(button.transform);
-                rt.anchoredPosition = Vector2.zero;
-                rt.sizeDelta = anchorPosition;
-                Text mpCostText = manaCost.AddComponent<Text>();
-                mpCostText.alignment = TextAnchor.LowerRight;
-                mpCostText.color = Color.blue;
-                mpCostText.fontSize = 40;
-                mpCostText.text = mana.ToString();
-                mpCostText.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-            }
+    private void CreateAbility(Ability ability, Transform container, bool castableAbilities)
+    {
+        GameObject button = Instantiate(new GameObject("Ability"), container);
+        button.AddComponent<RectTransform>();
+        button.transform.SetParent(container);
+        button.AddComponent<Image>();
+        Sprite sprite = Resources.Load<Sprite>("abilityIcons/" + ability.name);
+        if (sprite != null)
+        {
+            button.GetComponent<Image>().sprite = sprite;
+        }
+        else
+        {
+            GameObject text = Instantiate(new GameObject("text"));
+            RectTransform rt = text.AddComponent<RectTransform>();
+            Text t = text.AddComponent<Text>();
+            t.text = ability.name;
+            t.transform.SetParent(button.transform);
+            rt.anchoredPosition = Vector2.zero;
+            t.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+            t.color = Color.black;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.fontSize = 25;
+        }
 
-            CreateCooldown(ability, button.transform);
-            CreateCharges(ability, button.transform);
+        float mana = FindAbility(ability.name).manaCost;
+        if (mana > 0)
+        {
+            GameObject manaCost = new GameObject("mana");
+            RectTransform rt = manaCost.AddComponent<RectTransform>();
+            manaCost.transform.SetParent(button.transform);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = anchorPosition;
+            Text mpCostText = manaCost.AddComponent<Text>();
+            mpCostText.alignment = TextAnchor.LowerRight;
+            mpCostText.color = Color.blue;
+            mpCostText.fontSize = 40;
+            mpCostText.text = mana.ToString();
+            mpCostText.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        }
 
-            if (!castableAbilities) continue;
+        CreateCooldown(ability, button.transform);
+        CreateCharges(ability, button.transform);
 
-            if (FindAbility(ability.name).targeted)
+        if (!castableAbilities) return;
+
+        if (FindAbility(ability.name).targeted)
+        {
+            if (ability.general)
             {
                 button.AddComponent<Button>().onClick.AddListener(delegate
                 {
-                    TileSelector.Instance.SetSelectedAbility(ability, ability.OnTargetedAbilityChoose(piece));
+                    TileSelector.Instance.SetSelectedAbility(ability, ability.OnGeneralAbilityChoose(BoardCreator.mainBoard));
                     //TileSelector.Instance.HighlightAbilityTiles(ability.OnTargetedAbilityChoose(piece)); 
                 });
             }
             else
             {
-                button.AddComponent<Button>().onClick.AddListener(delegate { /*if (ability.canBeCasted()) /* => */ CastAbility(ability, null, piece); });
+                button.AddComponent<Button>().onClick.AddListener(delegate
+                {
+                    TileSelector.Instance.SetSelectedAbility(ability, ability.OnTargetedAbilityChoose(ability.owner));
+                });
             }
+
+        }
+        else
+        {
+            button.AddComponent<Button>().onClick.AddListener(delegate { /*if (ability.canBeCasted()) /* => */ CastAbility(ability, null, ability.owner); });
         }
     }
     public void CreateCooldown(Ability ability, Transform abilityObject)

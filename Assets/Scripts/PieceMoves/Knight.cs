@@ -66,7 +66,7 @@ public class Knight
             if (king) return true;
             return false;
         }
-        if (checkKing && GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color))
+        if (checkKing && GameManager.Instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color))
         {
             return false;
         }

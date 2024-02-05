@@ -67,20 +67,12 @@ public class BoardCreator : MonoBehaviour
     void Start()
     {
         container = Instantiate(new GameObject("Tiles")).transform;
-        SpawnMainBoard();
+        GameManager.Instance.StartGame();
     }
 
     public static Tile FindTile(int x, int y)
     {
         return mainBoard.tiles[(x-1) * 8 + (y - 1)];
-        /*for (int i = 0; i < tiles.Count; i++)
-        {
-            if (Coordinates.Equal(new Coordinates(x, y), tiles[i].coordinates))
-            {
-                return tiles[i];
-            }
-        }
-        return null;*/
     }
     public void DestroyMainBoard()
     {
@@ -97,21 +89,22 @@ public class BoardCreator : MonoBehaviour
     public void SpawnMainBoard()
     {
         List<Tile> tiles = new List<Tile>(64);
-        GameManager.instance.CurrentTurn = Colors.White;
         for (int x = 1; x <= boardSize; x++)
         {
             for (int y = 1; y <= boardSize; y++)
             {
                 GameObject tile = Instantiate(Resources.Load<GameObject>("Tile"), new Vector3(x, 0, y), Quaternion.identity);
                 tile.transform.SetParent(container);
+
                 TileObject tileObject = tile.GetComponent<TileObject>();
-                Tile t = tileObject.tile;
                 tileObject.x = x;
                 tileObject.y = y;
+                tileObject.SetDefaultColor();
+
+                Tile t = tileObject.tile;
                 tile.transform.name = $"{x}; {y}";
                 t.x = x;
                 t.y = y;
-                tileObject.SetDefaultColor();
                 tiles.Add(t);
             }
         }
@@ -139,7 +132,7 @@ public class BoardCreator : MonoBehaviour
 
         /*FindTile(4, 8).SpawnPiece(blackKing); // ..bar haha */
 
-
+        FindTile(1, 3).SpawnPiece(blackPawn);
         FindTile(1, 1).SpawnPiece(rook);
         FindTile(2, 1).SpawnPiece(knight);
         FindTile(3, 1).SpawnPiece(bishop);

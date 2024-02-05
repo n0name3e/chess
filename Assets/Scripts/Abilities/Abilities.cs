@@ -5,6 +5,8 @@ public class Abilities : MonoBehaviour
 {
     private static Abilities instance;
 
+    private AbilityManager abilityManager;
+
     public static Abilities Instance { get => instance; set => instance = value; }
     private void Awake()
     {
@@ -13,10 +15,11 @@ public class Abilities : MonoBehaviour
     void Start()
     {
         //StartCoroutine(a());
-        if (GameManager.instance.showAbilities)
+        if (GameManager.Instance.showAbilities)
         {
-            a(BoardCreator.mainBoard);
+            InitializeAbilities(BoardCreator.mainBoard);
         }
+        abilityManager = AbilityManager.Instance;
     }
     public static void JAA()
     {
@@ -28,9 +31,9 @@ public class Abilities : MonoBehaviour
 
         };*/
     }
-    public void a(Board board) //System.Collections.IEnumerator a()
+    public void InitializeAbilities(Board board)
     {
-        //yield return new WaitForEndOfFrame();
+        AbilityManager.Instance.generalAbilities.Add(new Ability("freeze", null) { OnGeneralAbilityChoose = UseFreeze, OnGeneralAbilityTileChoose = CastFreeze });
 
         foreach (Piece p in board.pieces)
         {
@@ -48,7 +51,7 @@ public class Abilities : MonoBehaviour
             p.abilities.Add(new Ability("punch", p) { OnUntargetedAbilityChoose = UsePunch });
         }
     }
-    bool UseWeaker(Piece piece) // static will be removed!
+    private bool UseWeaker(Piece piece) // static will be removed!
     {
         List<Tile> tiles = piece.GetPossibleMoves(false, false);
         bool wasCasted = false;
@@ -73,14 +76,11 @@ public class Abilities : MonoBehaviour
                     OnRemoveBuff = Remove
                 };
                 BuffManager.Instance.AddBuff(t.CurrentPiece, weak);
-                /*t.CurrentPiece.health *= (1f - AbilityManager.Instance.FindAbility("weaker").GetProperty("healthDecreasing"));  //(1f - (float)AbilityManager.Instance.FindAbility("weaker"));
-                t.CurrentPiece.maxHealth *= (1f - AbilityManager.Instance.FindAbility("weaker").GetProperty("healthDecreasing")); //(1f - (float)AbilityManager.Instance.FindAbility("weaker").properties);
-                */
             }
         }
         return wasCasted;
     }
-    List<Tile> UseFireball(Piece piece)
+    private List<Tile> UseFireball(Piece piece)
     {
         List<Tile> possibleMoves = piece.GetPossibleMoves();
         List<Tile> moves = new List<Tile>();
@@ -90,13 +90,21 @@ public class Abilities : MonoBehaviour
         }
         return moves;
     }
-    void CastFireball(Tile tile, Piece piece)
+    private void CastFireball(Tile tile, Piece piece)
     {
-        tile.CurrentPiece.DealDamage(AbilityManager.Instance.FindAbility("fireball").GetProperty("damage"));
+        tile.CurrentPiece.DealDamage(abilityManager.FindAbility("fireball").GetProperty("damage"));
+        Buff buff = new Buff("burning", (int) abilityManager.FindAbility("fireball").GetProperty("burnDuration")); ;
+        void UpdateFireball(Tile t, Colors color)
+        {
+            if (t.CurrentPiece?.color == color)
+            t.CurrentPiece?.DealDamage(abilityManager.FindAbility("fireball").GetProperty("burnDamage"));
+        }
+        buff.OnTurnEndTile = UpdateFireball;
+        BuffManager.Instance.AddBuff(tile, buff);
     }
-    List<Tile> UseTeleport(Piece piece)
+    private List<Tile> UseTeleport(Piece piece)
     {
-        if (TileSelector.Instance.doubleMovePiece != null) return new List<Tile>(0);
+        if (TileSelector.Instance.DoubleMovePiece != null) return new List<Tile>(0);
         List<Tile> moves = new List<Tile>();
         foreach (Tile t in piece.board.tiles)
         {
@@ -130,67 +138,49 @@ public class Abilities : MonoBehaviour
             }
         }
         return (bestEval, bestTile);
-        /*foreach (Piece piece in new List<Piece>(board.pieces))
-        {
-            if (piece.color == Colors.White) continue;
-            Ability ability = piece.FindAbility("teleport");
-
-            if (ability == null || !ability.canBeCasted()) continue;
-
-            if (ability.OnTargetedAbilityChoose != null)
-            {
-                moves = ability.OnTargetedAbilityChoose.Invoke(piece);
-                if (ability.OnTileChoose == null) continue;
-                foreach (Tile t in moves)
-                {
-                    Board cloneBoard = new Board();
-                    cloneBoard.CopyPieces(board.pieces);
-                    Tile tile = cloneBoard.FindTile(t.x, t.y);
-                    Piece p = cloneBoard.FindTile(piece.x, piece.y).CurrentPiece;
-
-                    Ability cloneAbility = cloneBoard.FindTile(piece.x, piece.y)?.CurrentPiece.FindAbility(ability.name);
-                    if (cloneAbility == null) continue;
-                    cloneAbility.OnTileChoose?.Invoke(tile, p);
-                    manaCostEval = ability.manaCost * 0.005f;
-
-                    bestEval = Mathf.Min(ChessAI.Instance.Minimax(cloneBoard, 1, int.MinValue, int.MaxValue, false) - 1, bestEval);
-                    bestAbility = ability;
-                    bestTile = tile;
-                }
-            }
-
-        }
-        if (bestTile != null)
-        {
-            bestTile = board.FindTile(bestTile.x, bestTile.y);
-        }*/
-        //return (bestEval, bestAbility, bestTile);
     }
 
-    void CastTeleport(Tile tile, Piece castingPiece)
+    private List<Tile> UseFreeze(Board board)
+    {
+        return new List<Tile>(board.tiles);
+    }
+    private void CastFreeze(Tile tile)
+    {
+        int stunTime = 1; 
+        tile.CurrentPiece?.Stun(stunTime);
+        List<Tile> tiles = tile.GetNeighbourTiles();
+        print(tiles.Count);
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            tiles[i].CurrentPiece?.Stun(stunTime);
+        }
+        GameManager.Instance.UpdateStunnedTiles(false);
+    }
+
+    private void CastTeleport(Tile tile, Piece castingPiece)
     {
         castingPiece.MovePiece(tile.x, tile.y, castingPiece.board);
     }
-    bool UseDoubleStep(Piece piece)
+    private bool UseDoubleStep(Piece piece)
     {
-        if (TileSelector.Instance.doubleMovePiece != null) return false;
-        TileSelector.Instance.doubleMovePiece = piece;
+        if (TileSelector.Instance.DoubleMovePiece != null) return false;
+        TileSelector.Instance.DoubleMovePiece = piece;
         Buff buff = new Buff("doubleMove", 1);
         buff.isUnlimited = true;
         buff.AddCharge(2);
         BuffManager.Instance.AddBuff(piece, buff);
         return true;
     }
-    void InitHex(Piece piece)
+    private void InitHex(Piece piece)
     {
         void Check(Piece p, Colors color)
         {
             Buff buff = new Buff("checkHex", 3);
             BuffManager.Instance.AddBuff(p, buff);
         }
-        GameManager.instance.Delegates.OnCheck += Check;
+        GameManager.Instance.Delegates.OnCheck += Check;
     }
-    bool UseHex(Piece piece)
+    private bool UseHex(Piece piece)
     {
         Piece originalPiece = null;
         Piece hexedPiece = null;
@@ -206,7 +196,6 @@ public class Abilities : MonoBehaviour
         }
         Buff hex = new Buff("hex", 2)
         {
-            //OnAddBuff = Transform,
             OnRemoveBuff = UnTransform
         };
         foreach (Piece p in new List<Piece>(BoardCreator.mainBoard.pieces))
@@ -233,7 +222,7 @@ public class Abilities : MonoBehaviour
         }
         return hasBeenCasted;
     }
-    void InitKamikadze(Piece piece)
+    private void InitKamikadze(Piece piece)
     {
         void Kamikadze(Piece capturer, Piece captured)
         {
@@ -248,10 +237,9 @@ public class Abilities : MonoBehaviour
                 }
             }
         }
-        GameManager.instance.Delegates.OnCapture += Kamikadze;
-
+        GameManager.Instance.Delegates.OnCapture += Kamikadze;
     }
-    List<Tile> UseShadowStep(Piece piece)
+    private List<Tile> UseShadowStep(Piece piece)
     {
         List<Tile> tiles = new List<Tile>();
         foreach (Piece p in piece.board.pieces)
@@ -268,11 +256,11 @@ public class Abilities : MonoBehaviour
         }
         return tiles;
     }
-    void CastShadowStep(Tile tile, Piece piece)
+    private void CastShadowStep(Tile tile, Piece piece)
     {
         tile.ChangeCurrentPiece(piece);
     }
-    List<Tile> UseMindControl(Piece piece)
+    private List<Tile> UseMindControl(Piece piece)
     {
         List<Tile> tiles = new List<Tile>();
         foreach (Piece p in piece.board.pieces)
@@ -282,7 +270,7 @@ public class Abilities : MonoBehaviour
         }
         return tiles;
     }
-    void CastMindControl(Tile tile, Piece piece)
+    private void CastMindControl(Tile tile, Piece piece)
     {
         Piece originalPiece = tile.CurrentPiece;
         if (originalPiece.pieceObject == null) return;
@@ -320,7 +308,7 @@ public class Abilities : MonoBehaviour
             transformedPiece.OnMove = FireRocket;
         }
     }
-    bool UsePunch(Piece piece)
+    private bool UsePunch(Piece piece)
     {
         Tile pieceTile = piece.board.FindTile(piece.x, piece.y + 1);
         Piece pieceToPunch = pieceTile.CurrentPiece;
@@ -341,7 +329,6 @@ public class Abilities : MonoBehaviour
         {
             return false;
         }
-
         return true;
     }
 }

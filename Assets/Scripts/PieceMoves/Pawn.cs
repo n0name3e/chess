@@ -5,7 +5,6 @@ public class Pawn
 {
     private Piece pieceObject;
     private PieceDataList pieceData;
-    private Board board;
 
     private int[,] squareTable = new int[8, 8] // [y, x]
     {
@@ -31,7 +30,6 @@ public class Pawn
         piece.healthRegeneration = Find().healthRegeneration;
         piece.manaRegeneration = Find().manaRegeneration;
         piece.cost = Find().cost;
-        board = pieceObject.board;
     }
     private PieceData Find()
     {
@@ -39,26 +37,28 @@ public class Pawn
     }
     private float GetTable(int x, int y)
     {
-        if (pieceObject.color == Colors.White) return squareTable[y- 1, x - 1];
+        if (pieceObject.color == Colors.White) return squareTable[y - 1, x - 1];
         else return squareTable[8 - y, x - 1];
     }
     private List<Tile> CheckPossibleMoves(bool king = false, bool checkKing = false)
     {
+        Board board = pieceObject.board;
         List<Tile> possibleTiles = new List<Tile>();
         int x = pieceObject.x;
         int y = pieceObject.y;
 
         int forwardDirection = (pieceObject.color == Colors.White) ? 1: -1;
-        int lastY = (pieceObject.color == Colors.White) ? 8: 1;
         int firstY = (pieceObject.color == Colors.White) ? 2: 7;
         if (king) // captures
         {
+            GetCaptureMoves(forwardDirection, possibleTiles, true);
+
+            return possibleTiles;
+            #region commented
             // List<Tile> captureTiles = new List<Tile>();
             /*possibleTiles.Add(board.FindTile(x + 1, y + forwardDirection));
             possibleTiles.Add(board.FindTile(x - 1, y + forwardDirection));*/
-            GetCaptureMoves(forwardDirection, possibleTiles);
 
-            return possibleTiles;
             /*if (pieceObject.color == Colors.White)
             {
                 if (x <= 7 && y <= 7)
@@ -82,26 +82,31 @@ public class Pawn
                 }
             }
             return possibleTiles;*/
+            #endregion
         }
+        Tile tile = board.FindTile(x, y + forwardDirection);
+        if (CheckTile(tile, checkKing))
+        {
+            possibleTiles.Add(tile);
+        }
+        if (y == firstY && tile.CurrentPiece == null)
+        {
+            tile = board.FindTile(x, y + 2 * forwardDirection);
+            if (CheckTile(tile, checkKing)) possibleTiles.Add(tile);
+        }
+        GetCaptureMoves(forwardDirection, possibleTiles, false);
 
-        Tile tile = board.FindTile(x, firstY + forwardDirection);
-        if (CheckTile(tile)) possibleTiles.Add(tile);
-        GetCaptureMoves(forwardDirection, possibleTiles); 
+        #region commented
         /*if (tile.CurrentPiece == null)
         {
             if (checkKing) 
             {
                 if (GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color) possibleTiles.Add(tile);
             }
-            else possibleTiles.Add(tile);*/                
-        }
-        if (y == firstY) 
-        {
-            tile = board.FindTile(x, firstY + 2 * forwardDirection);
-            if (CheckTile(tile)) possibleTiles.Add(tile);
-        }
-/*
-        if (pieceObject.color == Colors.White)
+            else possibleTiles.Add(tile);               
+        }*/
+
+        /*if (pieceObject.color == Colors.White)
         {
             Tile tile = pieceObject.board.FindTile(x, 3);
             if (y == 2)
@@ -224,27 +229,33 @@ public class Pawn
                 }
             }
         }*/
+        #endregion
         return possibleTiles;
     }
     private bool CheckTile(Tile tile, bool checkKing)
     {
         if (tile != null && tile.CurrentPiece == null)
         {
-            if ((checkKing && GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color)) || !checkKing) return true;
+            if (!checkKing || (checkKing && !GameManager.Instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color)))
+            {
+                return true;
+            }
         } 
         return false;
     }
     private void GetCaptureMoves(int forwardDirection, List<Tile> tiles, bool king)
     {
+        Board board = pieceObject.board;
+
         Tile leftTile = board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection);
         Tile rightTile = board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection);
         if (king)
         {
-            possibleTiles.Add(leftTile);
-            possibleTiles.Add(rightTile);
+            if (leftTile != null) tiles.Add(leftTile);
+            if (rightTile != null) tiles.Add(rightTile);
         }
-        if (leftTile?.CurrentPiece != null && leftTile.CurrentPiece.color != pieceObject.color) possibleTiles.Add(leftTile);
-        if (rightTile?.CurrentPiece != null && rightTile.CurrentPiece.color != pieceObject.color) possibleTiles.Add(rightTile);
+        if (leftTile?.CurrentPiece != null && leftTile.CurrentPiece.color != pieceObject.color) tiles.Add(leftTile);
+        if (rightTile?.CurrentPiece != null && rightTile.CurrentPiece.color != pieceObject.color) tiles.Add(rightTile);
         /*possibleTiles.Add(board.FindTile(pieceObject.x + 1, pieceObject.y + forwardDirection));
         possibleTiles.Add(board.FindTile(pieceObject.x - 1, pieceObject.y + forwardDirection));*/
     }

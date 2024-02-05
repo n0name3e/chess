@@ -6,6 +6,9 @@
     public delegate void Capture(Piece capturerPiece, Piece capturedPiece);
     public Capture OnCapture;
 
+    public delegate void EndTurn(Colors currentTurn);
+    public EndTurn OnTurnEnd;
+
     public void Clear()
     {
         OnCheck = null;

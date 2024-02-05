@@ -115,7 +115,7 @@ public class Queen
         }
         if (!king && checkKing)
         {
-            bool a = GameManager.instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color);
+            bool a = GameManager.Instance.CreateVirtualBoard(pieceObject, tile, pieceObject.color);
             if (a == true)
             {
                 if (tile.CurrentPiece != null && !king)

@@ -3,11 +3,10 @@ public class Tile
 {
     private Piece currentPiece;
     public TileObject tileObject;
-    public Ability currentAbility;
     public int x;
     public int y;
     public Board board;
-    public System.Collections.Generic.List<Buff> buffs;
+    public System.Collections.Generic.List<Buff> buffs = new System.Collections.Generic.List<Buff>();
 
     public Piece CurrentPiece { get => currentPiece; set => currentPiece = value; }
 
@@ -33,7 +32,7 @@ public class Tile
             }
             if (CurrentPiece.pieceObject != null)
             {
-                GameManager.instance.Delegates.OnCapture?.Invoke(piece, currentPiece);
+                GameManager.Instance.Delegates.OnCapture?.Invoke(piece, currentPiece);
 
                 Object.Destroy(currentPiece.pieceObject.gameObject);
             }
@@ -91,7 +90,7 @@ public class Tile
     }
     public System.Collections.Generic.List<Tile> GetNeighbourTiles()
     {        
-        System.Collections.Generic.List<Tile> tiles = new System.Collections.Generic.List<Tile>(9);
+        System.Collections.Generic.List<Tile> tiles = new System.Collections.Generic.List<Tile>();
         if (board.FindTile(x + 1, y + 1) != null) tiles.Add(board.FindTile(x + 1, y + 1));
         if (board.FindTile(x + 1, y - 1) != null) tiles.Add(board.FindTile(x + 1, y - 1));
         if (board.FindTile(x + 1, y) != null) tiles.Add(board.FindTile(x + 1, y));

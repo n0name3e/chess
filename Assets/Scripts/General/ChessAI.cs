@@ -60,7 +60,7 @@ public class ChessAI: MonoBehaviour
                 Tile t = BoardCreator.mainBoard.FindTile(bestT.x, bestT.y);
                 print(bestAbilityPiece.pieceType);
                 AbilityManager.Instance.CastAbility(bestAbilityPiece.FindAbility(bestAbility.name), t, bestAbilityPiece);
-                TileSelector.Instance.SetMovedTiles((bestAbilityPieceTile, BoardCreator.mainBoard.FindTile(bestT.x, bestT.y)));
+                TileHighlighter.Instance.SetAbilityMovedTiles((bestAbilityPieceTile, BoardCreator.mainBoard.FindTile(bestT.x, bestT.y)));
             }
         }
 
@@ -75,7 +75,7 @@ public class ChessAI: MonoBehaviour
         foreach (Piece piece in clonedPieces)
         {
             startingEvalution = Evaluate(cloneBoard) - (piece.GetSquareTable(piece.x, piece.y) / 100);
-            if (piece.color == Colors.White) continue;
+            if (piece.color == Colors.White || piece.IsStunned()) continue;
             List<Tile> possibleMoves = piece.GetPossibleMoves(false); // todo? checking check
             foreach (Tile tilee in possibleMoves)
             {
@@ -84,7 +84,6 @@ public class ChessAI: MonoBehaviour
                 int y = piece.y;
                 Tile startingTile = piece.currentTile;
                 Tile tile = cloneBoard.FindTile(tilee.x, tilee.y);
-                //if (tile.CurrentPiece != null && piece.color == tile.CurrentPiece.color) continue;    
                 if (tile.CurrentPiece != null && tile.CurrentPiece.isProtecredByPawn()
                     && piece.pieceType != PieceType.Pawn && bestMove == null)
                 {
@@ -92,14 +91,12 @@ public class ChessAI: MonoBehaviour
                     continue;
                 }
                 piecesMoved[piece.pieceType] += 1;
-                Move move = new Move(piece);//(cloneBoard.FindTile(piece.x, piece.y).CurrentPiece);
+                Move move = new Move(piece);
                 move.MakeMove(tile, cloneBoard);
                 float e = Evaluate(cloneBoard) - (piece.GetSquareTable(piece.x, piece.y) / 100);
                 if (e >= startingEvalution &&
                     bestEvalution < e)
                 {
-                    //print(piece.pieceType + " (" + tile.x + "; " + tile.y + ") " + startingEvalution + " -> " + e + " : Black");
-                    //print("remove (black)");
                     branchesRemoved++;
                     move.UndoMove();
                     continue;
@@ -109,11 +106,9 @@ public class ChessAI: MonoBehaviour
                     + piece.GetSquareTable(x, y) / 100;
                 float bonusEval = EvaluatePiece(cloneBoard, piece, startingTile, tilee);
                 eval -= bonusEval;
-                //print($"{piece} {x}; {y} -> {tile.x}; {tile.y}. -{piece.GetSquareTable(tile.x, tile.y) / 100} + {piece.GetSquareTable(x, y) / 100}");
-                //eval *= -1;
                 if (eval < bestEvalution || bestPiece == null)
                 {
-                    if (!GameManager.instance.KingInCheck(cloneBoard, Colors.Black).check)
+                    if (!GameManager.Instance.KingInCheck(cloneBoard, Colors.Black).check)
                     {
                         bestMove = tile;
                         bestPiece = piece;
@@ -131,7 +126,7 @@ public class ChessAI: MonoBehaviour
         if (bestPiece == null)
         {
             print("checkmate or stalemate <3 ^-^");
-            GameManager.instance.GameOver();
+            GameManager.Instance.EndGame();
             return;
         }
         Piece piece1 = pieces[bestPiece]; //BoardCreator.mainBoard.FindTile(bestPiece.x, bestPiece.y).CurrentPiece;
@@ -158,7 +153,7 @@ public class ChessAI: MonoBehaviour
         piecesMoved[PieceType.Rook] = 0;
         piecesMoved[PieceType.Queen] = 0;
         piecesMoved[PieceType.King] = 0;
-        GameManager.instance.EndTurn();
+        GameManager.Instance.EndTurn();
     }
     
     public float Minimax(Board board, int depth, float alpha, float beta, bool maximizingPlayer)
@@ -174,7 +169,7 @@ public class ChessAI: MonoBehaviour
             foreach (Piece piece in pieces)
             {
                 startingEvalution = Evaluate(board) + (piece.GetSquareTable(piece.x, piece.y) / 100);
-                if (piece.color == Colors.Black) continue;
+                if (piece.color == Colors.Black || piece.IsStunned()) continue;
                 List<Tile> poss = piece.GetPossibleMoves(true);
                 foreach (Tile tile in poss)
                 {
@@ -209,7 +204,7 @@ public class ChessAI: MonoBehaviour
                     eval += bonusEval;
                     if (eval > bestEval)
                     {
-                        if (!GameManager.instance.KingInCheck(board, Colors.White).check)
+                        if (!GameManager.Instance.KingInCheck(board, Colors.White).check)
                         {
                             bestEval = eval;
                         }
@@ -224,7 +219,7 @@ public class ChessAI: MonoBehaviour
             float bestEval = float.MaxValue;
             foreach (Piece piece in pieces)
             {
-                if (piece.color == Colors.White) continue;
+                if (piece.color == Colors.White || piece.IsStunned()) continue;
                 foreach (Tile tile in piece.GetPossibleMoves(false))
                 {
                     movesMade++;
@@ -249,7 +244,7 @@ public class ChessAI: MonoBehaviour
                     eval -= bonusEval;
                     if (eval < bestEval)
                     {
-                        if (!GameManager.instance.KingInCheck(board, Colors.Black).check)
+                        if (!GameManager.Instance.KingInCheck(board, Colors.Black).check)
                         {
                             bestEval = eval;
                         }
@@ -318,7 +313,7 @@ public class ChessAI: MonoBehaviour
             }
         }
 
-        // bonus points for attacking piece (dont work for queen to not evaluate too much)
+        // bonus points for attacking piece (doesnt work for queen to not evaluate too much)
         if (evaluatedPiece.pieceType != PieceType.Queen && board.pieces.Count > 12) return eval;
         List<Tile> possibleMoves = evaluatedPiece.GetPossibleMoves();
         foreach (Tile move in possibleMoves)
@@ -333,6 +328,7 @@ public class ChessAI: MonoBehaviour
         int pawnForwardDirection = (evaluatedPiece.color == Colors.White) ? 1 : -1;
         Tile checkingTile = board.FindTile(evaluatedPiece.x + 1, evaluatedPiece.y + pawnForwardDirection);
         Tile checkingTile1 = board.FindTile(evaluatedPiece.x - 1, evaluatedPiece.y + pawnForwardDirection);
+        
         if (checkingTile?.CurrentPiece?.color != evaluatedPiece.color || checkingTile1?.CurrentPiece?.color != evaluatedPiece.color)
         {
             if (evaluatedPiece.pieceType == PieceType.Pawn)
@@ -341,7 +337,6 @@ public class ChessAI: MonoBehaviour
                 bool protectingPawn1 = board.FindTile(evaluatedPiece.x - 1, evaluatedPiece.y - pawnForwardDirection)?.CurrentPiece?.color == evaluatedPiece.color;
                 if (protectingPawn0 || protectingPawn1)
                 {
-                    print("+1");
                     eval += 1f;
                 }         
             }

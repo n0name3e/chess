@@ -11,6 +11,7 @@ public class Board
         {
             Piece clonedPiece = new Piece(piece, this);
             pieces.Add(clonedPiece);
+            clonedPiece.Stun(piece.stunTimer);
             CopyAbilities(piece, clonedPiece);
         }
     }
@@ -26,7 +27,6 @@ public class Board
             a.owner = clonePiece;
             clonePiece.abilities.Add(a);
         }
-        //UnityEngine.MonoBehaviour.print(clonePiece.abilities.Count);
     }
     public Tile FindTile(int x, int y)
     {
@@ -57,16 +57,26 @@ public class Board
             pieces[i].ClearDelegates();
         }
         pieces.Clear();
-        tiles.Clear();
+        
     }
     public Board()
     {
         if (BoardCreator.mainBoard == null) return;
+        /*Tile[] tiles = BoardCreator.mainBoard.tiles;
+        int lenght = tiles.Length;
+        for (int i = 0; i < lenght; i++)
+        {
+            Tile clonedTile = new Tile(tiles[i]);
+            tiles[i] = clonedTile;
+            clonedTile.board = this;
+        }*/
+
         foreach (Tile tile in BoardCreator.mainBoard.tiles)
         {
             Tile clonedTile = new Tile(tile);
             tiles.Add(clonedTile);
             clonedTile.board = this;
         }
+
     }
 }

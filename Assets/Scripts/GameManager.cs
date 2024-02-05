@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
+    public static GameManager Instance { get; private set; }
 
     private Colors currentTurn = Colors.White;
     private bool gameEnded = false;
@@ -17,9 +17,9 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
         else
         {
@@ -31,6 +31,36 @@ public class GameManager : MonoBehaviour
     {
         currentTurn = currentTurn == Colors.White ? Colors.Black : Colors.White;
         PawnPromotion();
+        UpdateStunnedTiles(true); 
+
+        UpdatePiecesStatus();
+        
+
+        if (CurrentTurn != BoardCreator.playerColor)
+        {
+            StartCoroutine(MakeAiMove());
+        }
+        (bool isChecked, Piece checker) = KingInCheck(BoardCreator.mainBoard, currentTurn);
+        if (isChecked)
+        {
+            delegates.OnCheck?.Invoke(checker, currentTurn);
+        }
+        delegates.OnTurnEnd?.Invoke(currentTurn);
+
+        TileHighlighter.Instance.UnhighlightTiles();
+        foreach (Piece pieces in BoardCreator.mainBoard.pieces)
+        {
+            if (pieces.color == Colors.Black) continue;
+            if (pieces.pieceType == PieceType.King)
+            {
+                return; // king exists i guess :D
+            }
+        }
+        EndGame();
+    }
+
+    private void UpdatePiecesStatus()
+    {
         if (showAbilities)
         {
             foreach (Piece piece in BoardCreator.mainBoard.pieces)
@@ -45,33 +75,35 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
+        }
+        BuffManager.Instance.UpdateAllBuff(currentTurn);
 
-            BuffManager.Instance.UpdateAllBuff(currentTurn);
+        if (TileSelector.Instance.SelectedPiece != null)
+        {
+            StartCoroutine(DisplayInfo());
+        }
+    }
 
-            if (TileSelector.Instance.selectedPiece != null)
+    public void UpdateStunnedTiles(bool updateTimer)
+    {
+        print("update");
+        List<Piece> piecesToFreeze = BoardCreator.mainBoard.pieces;
+        int count = piecesToFreeze.Count;
+        for (int i = 0; i < count; i++)
+        {
+            Piece piece = piecesToFreeze[i];
+            if (piece.IsStunned())
             {
-                StartCoroutine(DisplayInfo());
+                if (updateTimer && currentTurn != piece.color) piece.stunTimer--;
+                if (piece.IsStunned())
+                {
+                    TileHighlighter.Instance.HighlightTile(piece.currentTile.tileObject, Color.blue);
+                    print("stunned"); 
+                    continue;
+                }              
             }
+            TileHighlighter.Instance.UnhighlightTile(piece.currentTile.tileObject);
         }
-        
-        if (CurrentTurn != BoardCreator.playerColor)
-        {
-            StartCoroutine(MakeAiMove());
-        }
-        (bool c, Piece p) = KingInCheck(BoardCreator.mainBoard, currentTurn);
-        if (c)
-        {
-            if (delegates.OnCheck != null) delegates.OnCheck.Invoke(p, currentTurn);
-        }
-        foreach (Piece pieces in BoardCreator.mainBoard.pieces)
-        {
-            if (pieces.color == Colors.Black) continue;
-            if (pieces.pieceType == PieceType.King)
-            {
-                return;
-            }
-        }
-        GameOver();
     }
     private IEnumerator MakeAiMove()
     {
@@ -81,20 +113,22 @@ public class GameManager : MonoBehaviour
     private IEnumerator DisplayInfo()
     {
         yield return null;
-        UI.Instance.DisplayInfoContainer(TileSelector.Instance.selectedPiece, true);
+        UI.Instance.DisplayInfoContainer(TileSelector.Instance.SelectedPiece, true);
     }
     public void StartGame()
     {
         GameEnded = false;
         BoardCreator.Instance.SpawnMainBoard();
-        Abilities.Instance.a(BoardCreator.mainBoard);
+        CurrentTurn = Colors.White;
+        Abilities.Instance.InitializeAbilities(BoardCreator.mainBoard);
     }
-    public void GameOver()
+    public void EndGame()
     {
         GameEnded = true;
     }
     private void PawnPromotion()
     {
+        // todo somewhen
         /*foreach (Piece piece in BoardCreator.pieces) // pawn promotion
         {
             Pawn pawn = piece.pieceObject.GetComponent<Pawn>();

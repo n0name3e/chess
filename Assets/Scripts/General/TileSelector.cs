@@ -4,46 +4,49 @@ using UnityEngine.Profiling;
 
 public class TileSelector : MonoBehaviour
 {
-    private static TileSelector instance;
+    private static TileSelector _instance;
 
-    private Camera cam;
-    private TileObject selectedTileObject;
+    private Camera _cam;
+    private TileObject _selectedTileObject;
 
-    public Piece selectedPiece;
-    private Ability selectedAbility;
+    public Piece SelectedPiece;
+    private Ability _selectedAbility;
 
-    private Tile selectedTile;
+    private Tile _selectedTile;
     List<Tile> possibleTileMoves = new List<Tile>();
 
-    public Piece doubleMovePiece;
-    [SerializeField] private bool isAndroid = false;
-    [SerializeField] private UnityEngine.UI.Text text;
+    private TileHighlighter _tileHighlighter;
 
-    private List<TileObject> highlightedTiles = new List<TileObject>();
-    private List<Tile> abilityTiles = new List<Tile>();
+    public Piece DoubleMovePiece;
+    [SerializeField] private UnityEngine.UI.Text _text;
 
-    public static TileSelector Instance { get => instance; set => instance = value; }
+
+    private List<Tile> _abilityTiles = new List<Tile>();
+
+    public static TileSelector Instance { get => _instance; set => _instance = value; }
 
     private void Awake()
     {
-        if (instance == null) instance = this;
+        if (_instance == null) _instance = this;
         else Destroy(gameObject);
+
+        _tileHighlighter = TileHighlighter.Instance;
     }
     // Start is called before the first frame update
     void Start()
     {
-        cam = Camera.main;
+        _cam = Camera.main;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (GameManager.instance.GameEnded) return;
+        if (GameManager.Instance.GameEnded) return;
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
+            print("touch");
             CheckTile();
             ShowStats();
-            return;
         }
         if (Input.GetMouseButtonDown(0))
         {
@@ -56,16 +59,16 @@ public class TileSelector : MonoBehaviour
     }
     private void ShowStats()
     {
-        if (!GameManager.instance.showAbilities) return;
-        selectedAbility = null;
+        if (!GameManager.Instance.showAbilities) return;
+        _selectedAbility = null;
         Ray ray;
-        if (isAndroid)
+        if (Input.touchCount > 0)
         {
-            ray = cam.ScreenPointToRay(Input.GetTouch(0).position);
+            ray = _cam.ScreenPointToRay(Input.GetTouch(0).position);
         }
         else
         {
-            ray = cam.ScreenPointToRay(Input.mousePosition);
+            ray = _cam.ScreenPointToRay(Input.mousePosition);
         }
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
@@ -74,29 +77,25 @@ public class TileSelector : MonoBehaviour
             if (tileObject != null)
             {
                 Tile tile = tileObject.tile;
-                
+
                 if (tile.CurrentPiece != null)
                 {
-                    SetSelectedPiece(tile.CurrentPiece);                    
+                    SetSelectedPiece(tile.CurrentPiece);
                 }
             }
         }
     }
     private void CheckTile()
     {
-        if (doubleMovePiece != null && BuffManager.Instance.FindBuff(doubleMovePiece, "doubleMove") == null) doubleMovePiece = null;
+        if (DoubleMovePiece != null && BuffManager.Instance.FindBuff(DoubleMovePiece, "doubleMove") == null) DoubleMovePiece = null;
         Ray ray;
-        if (isAndroid)
+        if (Input.touchCount > 0)
         {
-            if (Input.touchCount <= 0)
-            {
-                return;
-            }
-            ray = cam.ScreenPointToRay(Input.GetTouch(0).position);
-        }
+            ray = _cam.ScreenPointToRay(Input.GetTouch(0).position);
+        }       
         else
         {
-            ray = cam.ScreenPointToRay(Input.mousePosition);
+            ray = _cam.ScreenPointToRay(Input.mousePosition);
         }
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
@@ -105,50 +104,50 @@ public class TileSelector : MonoBehaviour
             if (tileObject != null)
             {
                 Tile tile = tileObject.tile;
-                if (abilityTiles.Contains(tile))
+                if (_abilityTiles.Contains(tile))
                 {
-                    AbilityManager.Instance.CastAbility(selectedAbility, tile, selectedPiece);
+                    AbilityManager.Instance.CastAbility(_selectedAbility, tile, SelectedPiece);
                     SetSelectedAbility(null);
-                    UnhighlightTiles();
+                    _tileHighlighter.UnhighlightTiles();
                     return;
                 }
-                if (selectedAbility != null)
+                if (_selectedAbility != null)
                 {
                     SetSelectedAbility(null);
-                    selectedPiece = null;
-                    UnhighlightTiles();
+                    SelectedPiece = null;
+                    _tileHighlighter.UnhighlightTiles();
                 }
-                if (doubleMovePiece != null && tileObject.tile.CurrentPiece != null
-                    && tileObject.tile.CurrentPiece != doubleMovePiece)
+                if (DoubleMovePiece != null && tileObject.tile.CurrentPiece != null
+                    && tileObject.tile.CurrentPiece != DoubleMovePiece)
                 { 
                     return;
                 }
-                if (selectedTileObject == null && tile.CurrentPiece != null && tile.CurrentPiece.color != BoardCreator.playerColor)
+                if (_selectedTileObject == null && tile.CurrentPiece != null && tile.CurrentPiece.color != BoardCreator.playerColor)
                     return;
-                if (tile.CurrentPiece == null && selectedTileObject != null)
+                if (tile.CurrentPiece == null && _selectedTileObject != null)
                 {
                     MovePiece(tile);
                 }
-                else if (tile.CurrentPiece != null && selectedTileObject != null)
+                else if (tile.CurrentPiece != null && _selectedTileObject != null)
                 {
-                    if (selectedTile.CurrentPiece.color == tile.CurrentPiece.color)
+                    if (_selectedTile.CurrentPiece.color == tile.CurrentPiece.color)
                     {
                         ChangeSelectedTile(tile.tileObject);
-                        HighlightTiles(possibleTileMoves);
+                        _tileHighlighter.HighlightTiles(possibleTileMoves);
                     }
                     else
                     {                      
                         MovePiece(tile);
                     }
                 }
-                else if (selectedTileObject == null && tile.CurrentPiece != null)
+                else if (_selectedTileObject == null && tile.CurrentPiece != null)
                 {
                     ChangeSelectedTile(tile.tileObject);
-                    HighlightTiles(possibleTileMoves);
+                    _tileHighlighter.HighlightTiles(possibleTileMoves);
                 }
-                else if (tile == selectedTile)
+                else if (tile == _selectedTile)
                 {
-                    UnhighlightTiles();
+                    _tileHighlighter.UnhighlightTiles();
                     ChangeSelectedTile(null);
                 }
             }
@@ -158,48 +157,48 @@ public class TileSelector : MonoBehaviour
     private void MovePiece(Tile tile)
     {
         Profiler.BeginSample("MovePiece");
-        if (selectedTileObject.tile.CurrentPiece.color != BoardCreator.playerColor)
+        if (_selectedTileObject.tile.CurrentPiece.color != BoardCreator.playerColor)
         {
             return;
         }
-        List<Tile> possibleMoves = selectedTile.CurrentPiece.GetPossibleMoves(false, true);
+        List<Tile> possibleMoves = _selectedTile.CurrentPiece.GetPossibleMoves(false, true);
 
         for (int i = 0; i < possibleMoves.Count; i++)
         {
             if (possibleMoves[i].x == tile.x && possibleMoves[i].y == tile.y)
             {
                 NewMethod();
-                Piece piece = selectedTileObject.tile.CurrentPiece;   
-                selectedTileObject.tile.CurrentPiece.MovePiece(tile.x, tile.y);
+                Piece piece = _selectedTileObject.tile.CurrentPiece;   
+                _selectedTileObject.tile.CurrentPiece.MovePiece(tile.x, tile.y);
                 ChangeSelectedTile(null);
 
                 Buff b = BuffManager.Instance.FindBuff(piece, "doubleMove");
                 if (b != null)
                 {
-                    doubleMovePiece = piece;
-                    b.RemoveTokens(1);
+                    DoubleMovePiece = piece;
+                    b.RemoveCharges(1);
                     return;
                 }
-                GameManager.instance.EndTurn();
+                GameManager.Instance.EndTurn();
                 return;
             }
         }
-        selectedTileObject.SetDefaultColor();
-        UnhighlightTiles(); 
+        _selectedTileObject.SetDefaultColor();
+        _tileHighlighter.UnhighlightTiles(); 
         ChangeSelectedTile(null);
         Profiler.EndSample();
 
         void NewMethod()
         {
-            UnhighlightTiles(); 
-            selectedTile.CurrentPiece.hasMoved = true;
-            selectedTileObject.SetDefaultColor();
+            _tileHighlighter.UnhighlightTiles(); 
+            _selectedTile.CurrentPiece.hasMoved = true;
+            _selectedTileObject.SetDefaultColor();
         }
     }
     
     private void SetSelectedPiece(Piece piece)
     {
-        selectedPiece = piece;
+        SelectedPiece = piece;
 
         bool castableAbilities = piece.color != Colors.Black;
 
@@ -207,61 +206,35 @@ public class TileSelector : MonoBehaviour
     }
     public void SetSelectedAbility(Ability ability, List<Tile> tiles = null)
     {
-        selectedAbility = ability;
+        _selectedAbility = ability;
         if (ability != null)
         {
-            UnhighlightTiles();
+            _tileHighlighter.UnhighlightTiles();
             ChangeSelectedTile(null);
             if (!ability.canBeCasted()) return;
             foreach (Tile tile in tiles)
             {
                 tile.tileObject.SetAbilityHightlightedColor();
-                abilityTiles = tiles;
-                highlightedTiles.Add(tile.tileObject);
+                _abilityTiles = tiles;
+                _tileHighlighter.highlightedTiles.Add(tile.tileObject);
             }
         }
         else
         {
-            abilityTiles.Clear();
+            _abilityTiles.Clear();
         }
     }
-    public void SetMovedTiles((Tile, Tile) tiles)
-    {
-        tiles.Item1.tileObject.GetComponent<MeshRenderer>().material.color = Color.red;
-        tiles.Item2.tileObject.GetComponent<MeshRenderer>().material.color = Color.red;
-        highlightedTiles.Add(tiles.Item1.tileObject);
-        highlightedTiles.Add(tiles.Item2.tileObject);
-    }
-    private void HighlightTiles(List<Tile> tiles)
-    {
-        UnhighlightTiles();
-        foreach (Tile tile in tiles)
-        {
-            tile.tileObject.SetHighlightedColor();
-            highlightedTiles.Add(tile.tileObject);
-        }
-    }
-    private void UnhighlightTiles() //(List<Tile> tiles)
-    {
-        foreach (TileObject tileObject in highlightedTiles)
-        {
-            tileObject.SetDefaultColor();
-            tileObject.tile.currentAbility = null;
-            //selectedPiece = null;
-            //SetSelectedAbility(null);
-        }
-        highlightedTiles.Clear();
-    }
+
     public void ChangeSelectedTile(TileObject tileObject)
     {
-        if (selectedTileObject != null) selectedTileObject.SetDefaultColor();
-        selectedTileObject = tileObject;
-        selectedTile = tileObject?.tile;
-        if (selectedTileObject != null)
+        if (_selectedTileObject != null) _selectedTileObject.SetDefaultColor();
+        _selectedTileObject = tileObject;
+        _selectedTile = tileObject?.tile;
+        if (_selectedTileObject != null)
         {
-            selectedTileObject.SetSelectedColor();
+            _selectedTileObject.SetSelectedColor();
         }
-        if (selectedTileObject != null && selectedTile.CurrentPiece != null) possibleTileMoves = selectedTile.CurrentPiece.GetPossibleMoves(false, true);
+        if (_selectedTileObject != null && _selectedTile.CurrentPiece != null) possibleTileMoves = _selectedTile.CurrentPiece.GetPossibleMoves(false, true);
         else possibleTileMoves.Clear();
     }
 }

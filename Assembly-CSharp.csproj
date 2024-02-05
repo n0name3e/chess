@@ -80,6 +80,7 @@
     <Compile Include="Assets\Scripts\General\Piece.cs" />
     <Compile Include="Assets\Scripts\General\PieceObject.cs" />
     <Compile Include="Assets\Scripts\General\Tile.cs" />
+    <Compile Include="Assets\Scripts\General\TileHighlighter.cs" />
     <Compile Include="Assets\Scripts\General\TileObject.cs" />
     <Compile Include="Assets\Scripts\General\TileSelector.cs" />
     <Compile Include="Assets\Scripts\PieceData.cs" />

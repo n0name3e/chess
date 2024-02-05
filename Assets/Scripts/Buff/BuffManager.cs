@@ -38,33 +38,47 @@ public class BuffManager : MonoBehaviour
             //GameManager.instance.Delegates.OnEndTurn += buff.OnTurnEndTile;
         }
     }
-    public void UpdateBuffTurn()
+    private void UpdateBuffsOnTurn(Colors currentTurnColor)
     {
         foreach (Tile tile in BoardCreator.mainBoard.tiles)
         {
             foreach (Buff buff in tile.buffs)
             {
-                buff.OnTurnEndTile.Invoke(tile);
+                buff.OnTurnEndTile.Invoke(tile, currentTurnColor);
             }
         }
     }
 
-    public void UpdateAllBuff(Colors color)
+    public void UpdateAllBuff(Colors currentTurnColor)
     {
         foreach (Piece piece in new List<Piece>(BoardCreator.mainBoard.pieces))
         {
-            if (piece.color != color) continue;
+            if (piece.color != currentTurnColor) continue;
             foreach (Buff buff in new List<Buff>(piece.buffs))
             {
                 if (buff.isUnlimited) continue;
                 buff.duration--;
                 if (buff.duration <= 0)
                 {
-                    print("duration");
                     RemoveBuff(piece, buff);
                 }
             }
         }
+        foreach (Tile tile in new List<Tile>(BoardCreator.mainBoard.tiles))
+        {
+            foreach (Buff buff in new List<Buff>(tile.buffs))
+            {
+                if (currentTurnColor != buff.turnAdded) continue;
+                if (buff.isUnlimited) continue;
+                buff.duration--;
+                if (buff.duration <= 0)
+                {
+                    print("duration");
+                    RemoveBuff(tile, buff);
+                }
+            }
+        }
+        UpdateBuffsOnTurn(currentTurnColor);
     }
     public void CheckAllBuffs(Colors color)
     {
@@ -72,7 +86,7 @@ public class BuffManager : MonoBehaviour
         {
             foreach (Buff buff in new List<Buff>(piece.buffs))
             {
-                if(buff.isCharges && buff.charges <= 0)
+                if (buff.isCharges && buff.charges <= 0)
                 {
                     RemoveBuff(piece, buff);
                 }
@@ -83,6 +97,10 @@ public class BuffManager : MonoBehaviour
     {
         buff.OnRemoveBuff?.Invoke(piece);
         piece.buffs.Remove(buff);
+    }
+    public void RemoveBuff(Tile tile, Buff buff)
+    {
+        tile.buffs.Remove(buff);
     }
     public Buff FindBuff(Tile tile, string buff)
     {

@@ -6,6 +6,7 @@
     public bool isUnlimited = false;
     public int charges;
     public bool isCharges;
+    public Colors turnAdded;
 
     public delegate void AddBuff(Piece piece);
     public AddBuff OnAddBuff;
@@ -16,7 +17,7 @@
     public delegate void RemoveBuff(Piece piece);
     public RemoveBuff OnRemoveBuff;
 
-    public delegate void TurnEndBuffTile(Tile tile);
+    public delegate void TurnEndBuffTile(Tile tile, Colors colors);
     public TurnEndBuffTile OnTurnEndTile;
 
     public Buff(string name, int duration)
@@ -30,7 +31,7 @@
         this.charges += charges;
         isCharges = true;
     }
-    public void RemoveTokens(int charges)
+    public void RemoveCharges(int charges)
     {
         this.charges -= charges;
         BuffManager.Instance.CheckAllBuffs(Colors.White);

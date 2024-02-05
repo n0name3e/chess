@@ -9,7 +9,15 @@
       "properties": [
         {
           "type": "damage",
-          "value": 40
+          "value": 10
+        },
+        {
+          "type": "burnDamage",
+          "value": 10
+        },
+        {
+          "type": "burnDuration",
+          "value": 3
         }
       ]
     },
@@ -40,6 +48,18 @@
           "condition": "captureEnemyPiece"
         }
       ]
+    },
+    {
+      "name": "jump",
+      "targeted": true,
+      "manaCost": 50,
+      "cooldown": 4
+    },
+    {
+      "name": "freeze",
+      "targeted": true,
+      "manaCost": 50,
+      "coolddown": 4
     },
     {
       "name": "doubleStep",

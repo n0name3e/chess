@@ -3,6 +3,7 @@
     public string name;
     public int cooldown;
     public float manaCost;
+    public bool general = false;
 
     /// <summary>
     /// can not be activated and have passive effect
@@ -20,6 +21,7 @@
     {
         this.name = name;
         this.owner = owner;
+        if (owner == null) general = true;
         abilityData = AbilityManager.Instance.FindAbility(name);
         manaCost = abilityData.manaCost;
     }
@@ -28,7 +30,7 @@
         if (!activated) return false;
         isCharges = AbilityManager.Instance.FindAbility(name).chargesConditions.Count > 0;
         if (isCharges && charges <= 0) return false;
-        if (cooldown > 0 || owner.mana < manaCost)
+        if (cooldown > 0 || (!general && owner.mana < manaCost))
         {
             return false;
         }
@@ -58,4 +60,11 @@
 
     public delegate void Init(Piece piece);
     public Init OnStart;
+
+    // for general ability
+    public delegate System.Collections.Generic.List<Tile> GeneralAbilityChoose(Board board);
+    public GeneralAbilityChoose OnGeneralAbilityChoose;
+    
+    public delegate void GeneralAbilityTileChoose(Tile tile);
+    public GeneralAbilityTileChoose OnGeneralAbilityTileChoose;
 }
